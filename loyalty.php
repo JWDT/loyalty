@@ -18,6 +18,12 @@
 * versions in the future. If you wish to customize PrestaShop for your
 * needs please refer to http://www.prestashop.com for more information.
 *
+*	This is a fork, now maintained by:
+*	John Thomson, prestashop-modules@jotweb.uk
+*
+*
+*  Modified by John Thomson for release with JOT Web UK Modules.
+*
 *  @author PrestaShop SA <contact@prestashop.com>
 *  @copyright  2007-2016 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
@@ -42,8 +48,8 @@ class Loyalty extends Module
 	{
 		$this->name = 'loyalty';
 		$this->tab = 'pricing_promotion';
-		$this->version = '1.2.9';
-		$this->author = 'PrestaShop';
+		$this->version = '1.3.0';
+		$this->author = 'JOT Web';
 		$this->need_instance = 0;
 
 		$this->controllers = array('default');
@@ -77,7 +83,7 @@ class Loyalty extends Module
 			|| !$this->registerHook('orderReturn') || !$this->registerHook('cancelProduct')	|| !$this->registerHook('customerAccount')
 			|| !Configuration::updateValue('PS_LOYALTY_POINT_VALUE', '0.20') || !Configuration::updateValue('PS_LOYALTY_MINIMAL', 0)
 			|| !Configuration::updateValue('PS_LOYALTY_POINT_RATE', '10') || !Configuration::updateValue('PS_LOYALTY_NONE_AWARD', '1')
-			|| !Configuration::updateValue('PS_LOYALTY_TAX', '0') || !Configuration::updateValue('PS_LOYALTY_VALIDITY_PERIOD', '0'))
+			|| !Configuration::updateValue('PS_LOYALTY_TAX', '0') || !Configuration::updateValue('PS_LOYALTY_VALIDITY_PERIOD', '0') || !Configuration::updateValue('PS_LOYALTY_USE_JS', '1')) 
 			return false;
 
 		$defaultTranslations = array('en' => 'Loyalty reward', 'fr' => 'Récompense fidélité');
@@ -189,6 +195,8 @@ class Loyalty extends Module
 				Configuration::updateValue('PS_LOYALTY_MINIMAL', (float)(Tools::getValue('minimal')));
 				Configuration::updateValue('PS_LOYALTY_TAX', (int)(Tools::getValue('PS_LOYALTY_TAX')));
 				Configuration::updateValue('PS_LOYALTY_VALIDITY_PERIOD', (int)(Tools::getValue('validity_period')));
+				Configuration::updateValue('PS_LOYALTY_USE_JS', (int)(Tools::getValue('ps_loyalty_use_js')));
+
 
 				$this->loyaltyStateValidation->id_order_state = (int)(Tools::getValue('id_order_state_validation'));
 				$this->loyaltyStateCancel->id_order_state = (int)(Tools::getValue('id_order_state_cancel'));
@@ -297,7 +305,8 @@ class Loyalty extends Module
 									   'point_value' => Configuration::get('PS_LOYALTY_POINT_VALUE'),
 									   'points_in_cart' => (int)$pointsBefore,
 									   'voucher' => LoyaltyModule::getVoucherValue((int)$pointsAfter),
-									   'none_award' => Configuration::get('PS_LOYALTY_NONE_AWARD')
+									   'none_award' => Configuration::get('PS_LOYALTY_NONE_AWARD'),
+									   'points_use_js' => Configuration::get('PS_LOYALTY_USE_JS'),
 								  ));
 
 			$this->context->controller->addJS(($this->_path).'js/loyalty.js');
@@ -630,6 +639,24 @@ class Loyalty extends Module
 						)
 					),
 					array(
+						'type' => 'switch',
+						'is_bool' => true, //retro-compat
+						'label' => $this->l('Use JavaScript to update values on Product pages'),
+						'name' => 'ps_loyalty_use_js',
+						'values' => array(
+							array(
+								'id' => 'js_on',
+								'value' => 1,
+								'label' => $this->l('Enabled')
+							),
+							array(
+								'id' => 'js_off',
+								'value' => 0,
+								'label' => $this->l('Disabled')
+							)
+						)
+					),
+					array(
 						'type' => 'categories',
 						'label' => $this->l('Vouchers created by the loyalty system can be used in the following categories:'),
 						'name' => 'categoryBox',
@@ -744,6 +771,8 @@ class Loyalty extends Module
 			'id_order_state_validation' => Tools::getValue('id_order_state_validation', $this->loyaltyStateValidation->id_order_state),
 			'id_order_state_cancel' => Tools::getValue('id_order_state_cancel', $this->loyaltyStateCancel->id_order_state),
 			'PS_LOYALTY_TAX' => Tools::getValue('PS_LOYALTY_TAX', Configuration::get('PS_LOYALTY_TAX')),
+			'PS_LOYALTY_USE_JS' => Tools::getValue('ps_loyalty_use_js', Configuration::get('PS_LOYALTY_USE_JS')),
+
 		);
 
 		$languages = Language::getLanguages(false);

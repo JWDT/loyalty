@@ -22,6 +22,7 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
+{if $points_use_js}
 <script type="text/javascript">
 var point_rate = {$point_rate};
 var point_value = {$point_value};
@@ -66,6 +67,8 @@ $(document).ready(function() {
 	});
 });
 </script>
+{/if}
+
 <p id="loyalty" class="align_justify">
 	{if $points}
 		{l s='By buying this product you can collect up to' mod='loyalty'} <b><span id="loyalty_points">{$points}</span> 
